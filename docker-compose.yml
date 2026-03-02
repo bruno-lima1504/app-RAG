@@ -1,0 +1,8 @@
+services:
+  qdrant:
+    container_name: app-rag-qdrant
+    image: qdrant/qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - .data/qdrant:/qdrant/storage
