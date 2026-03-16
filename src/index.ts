@@ -11,15 +11,15 @@
 //   console.log(`Server is running at http://localhost:${port}`);
 // });
 
-import { searchDocuments } from "./services/quey.js";
+import { generateRAgResponse } from "./services/rag.js";
 
 async function main() {
-  console.log("Iniciando a busca...");
-  const result = await searchDocuments({
-    question: "Qual a receita liquida da nike em 2022?",
+  console.log("Iniciando a geração de resposta RAG...");
+  const result = await generateRAgResponse({
+    question: "Qual a receita liquida da nike em 2023?",
     topK: 3,
   });
-  console.log("Resultado da busca:", result);
+  console.log("Resultado da geração de resposta RAG:", result);
 }
 
 main();

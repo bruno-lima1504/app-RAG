@@ -27,3 +27,16 @@ export interface QueryResponse {
   answer: searchResult[];
   countChunks: number;
 }
+
+interface Source {
+  fileName: string;
+  page?: number;
+  score?: number;
+}
+
+export interface RAGResponse {
+  question: string;
+  answer: string;
+  sources?: Source[];
+  tokensUsed?: number;
+}
