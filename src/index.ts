@@ -1,25 +1,19 @@
-// import { config } from "./config.js";
-// import express from "express";
+import { config } from "./config.js";
+import express from "express";
+import queryRouter from "./routes/queryRouter.js";
+import documentRouter from "./routes/documentRouter.js";
 
-// const app = express();
+const app = express();
 
-// const port = config.server.port;
+const port = config.server.port;
 
-// app.get("/", (_, res) => res.json({ message: "RAG APP is running" }));
+app.use(express.json());
 
-// app.listen(port, () => {
-//   console.log(`Server is running at http://localhost:${port}`);
-// });
+app.get("/", (_, res) => res.json({ message: "RAG APP is running" }));
 
-import { generateRAgResponse } from "./services/rag.js";
+app.use("/query", queryRouter);
+app.use("/documents", documentRouter);
 
-async function main() {
-  console.log("Iniciando a geração de resposta RAG...");
-  const result = await generateRAgResponse({
-    question: "Qual a receita liquida da nike em 2023?",
-    topK: 3,
-  });
-  console.log("Resultado da geração de resposta RAG:", result);
-}
-
-main();
+app.listen(port, () => {
+  console.log(`Server is running at http://localhost:${port}`);
+});
