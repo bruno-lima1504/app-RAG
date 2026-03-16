@@ -4,13 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import openAiService from "./openai.js";
 import qdrantService from "./qdrant.js";
 import { config } from "../config.js";
-
-interface UploadResponse {
-  success: boolean;
-  documentId: string;
-  chuncksCount: number;
-  message?: string;
-}
+import type { UploadResponse } from "../types.js";
 
 const tesxtSplitter = new RecursiveCharacterTextSplitter({
   chunkSize: 1000,
