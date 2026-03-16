@@ -10,7 +10,7 @@ export const config = {
   },
   qdrant: {
     url: process.env.QDRANT_URL || "http://localhost:6333",
-    collection: process.env.QDRANT_COLLECTION || "documents",
+    collectionName: process.env.QDRANT_COLLECTION || "documents",
   },
   server: {
     port: process.env.PORT || 3000,
