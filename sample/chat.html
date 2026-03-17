@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>RAG Streaming</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+      }
+      #question {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        margin-bottom: 10px;
+      }
+      button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      #response {
+        margin-top: 20px;
+        padding: 20px;
+        background: #f5f5f5;
+        border-radius: 8px;
+        min-height: 100px;
+        white-space: pre-wrap;
+      }
+      #sources {
+        margin-top: 20px;
+        padding: 10px;
+        background: #e3f2fd;
+        border-radius: 4px;
+        font-size: 12px;
+      }
+      .loading {
+        color: #666;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>RAG Streaming</h1>
+
+    <input
+      type="text"
+      id="question"
+      placeholder="Digite sua pergunta..."
+      value="Qual foi a receita da Nike em 2023?"
+    />
+
+    <button onclick="startStream()">Enviar</button>
+
+    <div id="response" class="loading">Resposta aparecerá aqui...</div>
+    <div id="sources"></div>
+
+    <script>
+      function startStream() {
+        const question = document.getElementById("question").value;
+        const responseDiv = document.getElementById("response");
+        const sourcesDiv = document.getElementById("sources");
+
+        // Reset
+        responseDiv.textContent = "";
+        responseDiv.className = "loading";
+        sourcesDiv.textContent = "";
+
+        // SSE via fetch (POST com corpo)
+        fetch("http://localhost:3000/query/stream", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ question }),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = "";
+
+            function read() {
+              reader.read().then(({ done, value }) => {
+                if (value) buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split("\n");
+                buffer = lines.pop() || "";
+
+                lines.forEach((line) => {
+                  if (!line.startsWith("data: ")) return;
+                  const raw = line.substring(6);
+                  if (raw === "[DONE]") return;
+                  try {
+                    const data = JSON.parse(raw);
+                    if (data.type === "sources") {
+                      const items = Array.isArray(data.content) ? data.content : [];
+                      sourcesDiv.innerHTML =
+                        "<strong>Fontes:</strong><br>" +
+                        items
+                          .map(
+                            (s) =>
+                              `${s?.fileName ?? "Documento"}${s?.page ? ` (p. ${s.page})` : ""} (score: ${((s?.score ?? 0)).toFixed(2)})`,
+                          )
+                          .join("<br>");
+                    }
+                    if (data.type === "token") {
+                      responseDiv.className = "";
+                      responseDiv.textContent += data.content;
+                    }
+                    if (data.type === "done") {
+                      console.log("Stream concluído");
+                    }
+                    if (data.answer) {
+                      responseDiv.className = "";
+                      responseDiv.textContent = data.answer;
+                    }
+                  } catch (_) {}
+                });
+
+                if (!done) read();
+              });
+            }
+
+            read();
+          })
+          .catch((error) => {
+            responseDiv.textContent = "Erro: " + error.message;
+          });
+      }
+    </script>
+  </body>
+</html>
